@@ -1,0 +1,2093 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health_check",
+        "parameters": [
+          {
+            "name": "X-Request-Id",
+            "in": "header",
+            "description": "Optional safe request ID to propagate.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "X-Request-Id": {
+                "description": "Request ID propagated by the API.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "description": "The API is running but the database is unavailable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Check API and database availability",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "operationId": "products_list",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "example": 20
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "newest",
+                "price_asc",
+                "price_desc"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "description": "Exact product category filter.",
+            "schema": {
+              "example": "coffee",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Case-insensitive search across product name and description.",
+            "schema": {
+              "example": "kopi",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "Cache-Control": {
+                "description": "Product data is never cached.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Request ID propagated by the API.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductCollectionDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "List active products",
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/api/v1/products/{slug}": {
+      "get": {
+        "operationId": "products_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "kopi-arabika-gayo",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "Cache-Control": {
+                "description": "Product data is never cached.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Request ID propagated by the API.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductDetailDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product was not found or is inactive.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get an active product by slug",
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/api/v1/articles": {
+      "get": {
+        "operationId": "articles_list",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "example": 20
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "example": 1
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "product",
+                "news",
+                "other"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "Cache-Control": {
+                "description": "Published article cache policy.",
+                "schema": {
+                  "type": "string",
+                  "example": "public, max-age=300, stale-while-revalidate=86400"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Request ID propagated by the API.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleCollectionDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "List published articles",
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/api/v1/articles/{slug}": {
+      "get": {
+        "operationId": "articles_getBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "panduan-menyeduh-kopi",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "Cache-Control": {
+                "description": "Published article cache policy.",
+                "schema": {
+                  "type": "string",
+                  "example": "public, max-age=300, stale-while-revalidate=86400"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Request ID propagated by the API.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleDetailDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Article was not found or is unpublished.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get a published article by slug",
+        "tags": [
+          "Articles"
+        ]
+      }
+    },
+    "/api/v1/cart": {
+      "post": {
+        "operationId": "cart_bootstrap",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "headers": {
+              "ETag": {
+                "description": "Quoted Cart version.",
+                "schema": {
+                  "type": "string",
+                  "example": "\"1\""
+                }
+              },
+              "Cache-Control": {
+                "description": "Cart responses are never cached.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Bootstrap the current guest Cart",
+        "tags": [
+          "Cart"
+        ]
+      },
+      "get": {
+        "operationId": "cart_getCurrent",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "headers": {
+              "ETag": {
+                "description": "Quoted Cart version.",
+                "schema": {
+                  "type": "string",
+                  "example": "\"1\""
+                }
+              },
+              "Cache-Control": {
+                "description": "Cart responses are never cached.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "guest_session": []
+          }
+        ],
+        "summary": "Get the current guest Cart",
+        "tags": [
+          "Cart"
+        ]
+      }
+    },
+    "/api/v1/cart/items": {
+      "post": {
+        "operationId": "cart_addItem",
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "description": "Quoted Cart version, for example \"1\".",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "ETag": {
+                "description": "Quoted Cart version.",
+                "schema": {
+                  "type": "string",
+                  "example": "\"2\""
+                }
+              },
+              "Cache-Control": {
+                "description": "Cart responses are never cached.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartDto"
+                }
+              }
+            }
+          },
+          "412": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "guest_session": []
+          }
+        ],
+        "summary": "Add a Product Variant to the current Cart",
+        "tags": [
+          "Cart"
+        ]
+      }
+    },
+    "/api/v1/cart/items/{itemId}": {
+      "patch": {
+        "operationId": "cart_updateItem",
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "description": "Quoted Cart version, for example \"1\".",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "ETag": {
+                "description": "Quoted Cart version.",
+                "schema": {
+                  "type": "string",
+                  "example": "\"2\""
+                }
+              },
+              "Cache-Control": {
+                "description": "Cart responses are never cached.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "guest_session": []
+          }
+        ],
+        "summary": "Update a current Cart Item quantity",
+        "tags": [
+          "Cart"
+        ]
+      },
+      "delete": {
+        "operationId": "cart_removeItem",
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "description": "Quoted Cart version, for example \"1\".",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "ETag": {
+                "description": "Quoted Cart version.",
+                "schema": {
+                  "type": "string",
+                  "example": "\"2\""
+                }
+              },
+              "Cache-Control": {
+                "description": "Cart responses are never cached.",
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "412": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "guest_session": []
+          }
+        ],
+        "summary": "Remove a current Cart Item",
+        "tags": [
+          "Cart"
+        ]
+      }
+    },
+    "/api/v1/orders": {
+      "post": {
+        "operationId": "orders_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Printable ASCII key, 16 to 128 characters.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "description": "Quoted Cart version, for example \"2\".",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderWithInitialPaymentAttemptDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "428": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "502": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "guest_session": []
+          }
+        ],
+        "summary": "Create an awaiting-payment Order from the current Cart",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{orderId}": {
+      "get": {
+        "operationId": "orders_getById",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              }
+            },
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "guest_session": []
+          }
+        ],
+        "summary": "Get a guest-owned Order",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{orderId}/payment-attempts": {
+      "post": {
+        "operationId": "payments_createAttempt",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentAttemptDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "502": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "guest_session": []
+          }
+        ],
+        "summary": "Create a retry Payment Attempt for an Order",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/fake-payments/{paymentAttemptId}/outcome": {
+      "post": {
+        "operationId": "fakePayments_submitOutcome",
+        "parameters": [
+          {
+            "name": "paymentAttemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentAttemptDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "guest_session": []
+          }
+        ],
+        "summary": "Simulate a fake payment outcome",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/webhooks/fake-payment": {
+      "post": {
+        "operationId": "fakePayments_receiveWebhook",
+        "parameters": [
+          {
+            "name": "X-Fake-Signature",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Fake-Timestamp",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Fake-Event-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FakePaymentWebhookDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookAcknowledgementDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetailsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Receive a signed fake payment webhook",
+        "tags": [
+          "Payments"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Mini E-Commerce API",
+    "description": "HTTP foundation for the Mini E-Commerce purchase journey.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "guest_session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "guest_session"
+      }
+    },
+    "schemas": {
+      "ProblemDetailsDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri",
+            "example": "urn:mini-e-commerce:problem:VALIDATION_FAILED"
+          },
+          "title": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "status": {
+            "type": "number",
+            "example": 422
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "MALFORMED_REQUEST",
+              "GUEST_SESSION_REQUIRED",
+              "PRODUCT_NOT_FOUND",
+              "ARTICLE_NOT_FOUND",
+              "CART_ITEM_NOT_FOUND",
+              "ORDER_NOT_FOUND",
+              "CHECKOUT_CART_CHANGED",
+              "INSUFFICIENT_STOCK",
+              "IDEMPOTENCY_KEY_REUSED",
+              "INVALID_ORDER_TRANSITION",
+              "CART_VERSION_MISMATCH",
+              "VALIDATION_FAILED",
+              "PRECONDITION_REQUIRED",
+              "PAYMENT_GATEWAY_UNAVAILABLE",
+              "INTERNAL_ERROR"
+            ],
+            "example": "VALIDATION_FAILED"
+          },
+          "detail": {
+            "type": "string",
+            "example": "Request validation failed."
+          },
+          "requestId": {
+            "type": "string",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "currentCart": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "order": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "paymentAttempt": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code",
+          "detail",
+          "requestId"
+        ]
+      },
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "unavailable"
+            ],
+            "example": "healthy"
+          },
+          "database": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "example": "available"
+          }
+        },
+        "required": [
+          "status",
+          "database"
+        ]
+      },
+      "MoneyDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 85000
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "IDR"
+            ],
+            "example": "IDR"
+          }
+        },
+        "required": [
+          "amount",
+          "currency"
+        ]
+      },
+      "PriceRangeDto": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "example": {
+              "amount": 85000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "max": {
+            "example": {
+              "amount": 155000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ]
+      },
+      "ProductVariantDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "20000000-0000-4000-8000-000000000001"
+          },
+          "optionLabel": {
+            "type": "string",
+            "example": "250 g"
+          },
+          "price": {
+            "example": {
+              "amount": 85000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "availableQuantity": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 12
+          }
+        },
+        "required": [
+          "id",
+          "optionLabel",
+          "price",
+          "availableQuantity"
+        ]
+      },
+      "ProductSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "10000000-0000-4000-8000-000000000001"
+          },
+          "slug": {
+            "type": "string",
+            "example": "kopi-arabika-gayo"
+          },
+          "name": {
+            "type": "string",
+            "example": "Kopi Arabika Gayo"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "/images/products/kopi-arabika-gayo.webp"
+          },
+          "priceRange": {
+            "nullable": true,
+            "example": {
+              "min": {
+                "amount": 85000,
+                "currency": "IDR"
+              },
+              "max": {
+                "amount": 155000,
+                "currency": "IDR"
+              }
+            },
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceRangeDto"
+              }
+            ]
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "IN_STOCK",
+              "LOW_STOCK",
+              "OUT_OF_STOCK"
+            ],
+            "example": "IN_STOCK"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "thumbnail",
+          "priceRange",
+          "availability"
+        ]
+      },
+      "ProductDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "10000000-0000-4000-8000-000000000001"
+          },
+          "slug": {
+            "type": "string",
+            "example": "kopi-arabika-gayo"
+          },
+          "name": {
+            "type": "string",
+            "example": "Kopi Arabika Gayo"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "/images/products/kopi-arabika-gayo.webp"
+          },
+          "priceRange": {
+            "nullable": true,
+            "example": {
+              "min": {
+                "amount": 85000,
+                "currency": "IDR"
+              },
+              "max": {
+                "amount": 155000,
+                "currency": "IDR"
+              }
+            },
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PriceRangeDto"
+              }
+            ]
+          },
+          "availability": {
+            "type": "string",
+            "enum": [
+              "IN_STOCK",
+              "LOW_STOCK",
+              "OUT_OF_STOCK"
+            ],
+            "example": "IN_STOCK"
+          },
+          "description": {
+            "type": "string",
+            "example": "Biji kopi panggang medium untuk seduhan harian."
+          },
+          "images": {
+            "example": [
+              "/images/products/kopi-arabika-gayo.webp"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductVariantDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "thumbnail",
+          "priceRange",
+          "availability",
+          "description",
+          "images",
+          "variants"
+        ]
+      },
+      "PageInfoDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 1
+          },
+          "pageSize": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "example": 20
+          },
+          "totalItems": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 3
+          },
+          "totalPages": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 1
+          }
+        },
+        "required": [
+          "page",
+          "pageSize",
+          "totalItems",
+          "totalPages"
+        ]
+      },
+      "ProductCollectionDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductSummaryDto"
+            }
+          },
+          "pageInfo": {
+            "$ref": "#/components/schemas/PageInfoDto"
+          }
+        },
+        "required": [
+          "items",
+          "pageInfo"
+        ]
+      },
+      "ArticleSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "30000000-0000-4000-8000-000000000001"
+          },
+          "slug": {
+            "type": "string",
+            "example": "panduan-menyeduh-kopi"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PRODUCT",
+              "NEWS",
+              "OTHER"
+            ],
+            "example": "PRODUCT"
+          },
+          "title": {
+            "type": "string",
+            "example": "Panduan Menyeduh Kopi di Rumah"
+          },
+          "excerpt": {
+            "type": "string",
+            "example": "Beberapa langkah sederhana untuk memulai seduhan kopi."
+          },
+          "coverImage": {
+            "type": "string",
+            "example": "/images/articles/panduan-menyeduh-kopi.webp"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-10T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "type",
+          "title",
+          "excerpt",
+          "coverImage",
+          "publishedAt"
+        ]
+      },
+      "ArticleDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "30000000-0000-4000-8000-000000000001"
+          },
+          "slug": {
+            "type": "string",
+            "example": "panduan-menyeduh-kopi"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "PRODUCT",
+              "NEWS",
+              "OTHER"
+            ],
+            "example": "PRODUCT"
+          },
+          "title": {
+            "type": "string",
+            "example": "Panduan Menyeduh Kopi di Rumah"
+          },
+          "excerpt": {
+            "type": "string",
+            "example": "Beberapa langkah sederhana untuk memulai seduhan kopi."
+          },
+          "coverImage": {
+            "type": "string",
+            "example": "/images/articles/panduan-menyeduh-kopi.webp"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-10T00:00:00.000Z"
+          },
+          "contentHtml": {
+            "type": "string",
+            "example": "<p>Gunakan air bersih dan takaran kopi yang konsisten.</p>"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "type",
+          "title",
+          "excerpt",
+          "coverImage",
+          "publishedAt",
+          "contentHtml"
+        ]
+      },
+      "ArticleCollectionDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArticleSummaryDto"
+            }
+          },
+          "pageInfo": {
+            "$ref": "#/components/schemas/PageInfoDto"
+          }
+        },
+        "required": [
+          "items",
+          "pageInfo"
+        ]
+      },
+      "CartItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productVariantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productSlug": {
+            "type": "string",
+            "example": "kopi-arabika-gayo"
+          },
+          "productName": {
+            "type": "string",
+            "example": "Kopi Arabika Gayo"
+          },
+          "thumbnail": {
+            "type": "string",
+            "example": "/images/products/kopi-arabika-gayo.webp"
+          },
+          "optionLabel": {
+            "type": "string",
+            "example": "250 g"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99,
+            "example": 2
+          },
+          "unitPrice": {
+            "example": {
+              "amount": 85000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "lineTotal": {
+            "example": {
+              "amount": 170000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "availableQuantity": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 12
+          },
+          "isAvailable": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "id",
+          "productVariantId",
+          "productId",
+          "productSlug",
+          "productName",
+          "thumbnail",
+          "optionLabel",
+          "quantity",
+          "unitPrice",
+          "lineTotal",
+          "availableQuantity",
+          "isAvailable"
+        ]
+      },
+      "CartDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 4
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CartItemDto"
+            }
+          },
+          "subtotal": {
+            "example": {
+              "amount": 170000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "items",
+          "subtotal"
+        ]
+      },
+      "CheckoutCustomerDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "example": "Ada Lovelace"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "example": "ada@example.test"
+          }
+        },
+        "required": [
+          "name",
+          "email"
+        ]
+      },
+      "ShippingAddressDto": {
+        "type": "object",
+        "properties": {
+          "line1": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "Jl. Contoh 1"
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 100,
+            "example": "Jakarta"
+          },
+          "postalCode": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 12,
+            "example": "10110"
+          },
+          "countryCode": {
+            "type": "string",
+            "enum": [
+              "ID"
+            ],
+            "example": "ID"
+          }
+        },
+        "required": [
+          "line1",
+          "city",
+          "postalCode",
+          "countryCode"
+        ]
+      },
+      "OrderItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "productVariantId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string",
+            "example": "KOPI-GAYO-250G"
+          },
+          "name": {
+            "type": "string",
+            "example": "Kopi Arabika Gayo"
+          },
+          "optionLabel": {
+            "type": "string",
+            "example": "250 g"
+          },
+          "unitPrice": {
+            "example": {
+              "amount": 85000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "example": 2
+          },
+          "lineTotal": {
+            "example": {
+              "amount": 170000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "productVariantId",
+          "sku",
+          "name",
+          "optionLabel",
+          "unitPrice",
+          "quantity",
+          "lineTotal"
+        ]
+      },
+      "PaymentAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "SUCCEEDED",
+              "FAILED",
+              "EXPIRED"
+            ],
+            "example": "PENDING"
+          },
+          "providerReference": {
+            "type": "string",
+            "example": "provider-reference"
+          },
+          "amount": {
+            "example": {
+              "amount": 170000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "providerReference",
+          "amount",
+          "expiresAt",
+          "createdAt"
+        ]
+      },
+      "OrderDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AWAITING_PAYMENT",
+              "PAID",
+              "EXPIRED"
+            ],
+            "example": "AWAITING_PAYMENT"
+          },
+          "customerName": {
+            "type": "string",
+            "example": "Ada Lovelace"
+          },
+          "customerEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "ada@example.test"
+          },
+          "shippingAddress": {
+            "$ref": "#/components/schemas/ShippingAddressDto"
+          },
+          "shippingMethod": {
+            "type": "string",
+            "enum": [
+              "REGULAR"
+            ],
+            "example": "REGULAR"
+          },
+          "subtotal": {
+            "example": {
+              "amount": 170000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "shippingFee": {
+            "example": {
+              "amount": 0,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "grandTotal": {
+            "example": {
+              "amount": 170000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "customerName",
+          "customerEmail",
+          "shippingAddress",
+          "shippingMethod",
+          "subtotal",
+          "shippingFee",
+          "grandTotal",
+          "expiresAt",
+          "createdAt",
+          "items"
+        ]
+      },
+      "OrderWithInitialPaymentAttemptDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AWAITING_PAYMENT",
+              "PAID",
+              "EXPIRED"
+            ],
+            "example": "AWAITING_PAYMENT"
+          },
+          "customerName": {
+            "type": "string",
+            "example": "Ada Lovelace"
+          },
+          "customerEmail": {
+            "type": "string",
+            "format": "email",
+            "example": "ada@example.test"
+          },
+          "shippingAddress": {
+            "$ref": "#/components/schemas/ShippingAddressDto"
+          },
+          "shippingMethod": {
+            "type": "string",
+            "enum": [
+              "REGULAR"
+            ],
+            "example": "REGULAR"
+          },
+          "subtotal": {
+            "example": {
+              "amount": 170000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "shippingFee": {
+            "example": {
+              "amount": 0,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "grandTotal": {
+            "example": {
+              "amount": 170000,
+              "currency": "IDR"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MoneyDto"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemDto"
+            }
+          },
+          "paymentAttempt": {
+            "$ref": "#/components/schemas/PaymentAttemptDto"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "customerName",
+          "customerEmail",
+          "shippingAddress",
+          "shippingMethod",
+          "subtotal",
+          "shippingFee",
+          "grandTotal",
+          "expiresAt",
+          "createdAt",
+          "items",
+          "paymentAttempt"
+        ]
+      },
+      "FakePaymentOutcomeDto": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "SUCCEEDED",
+              "FAILED",
+              "PENDING"
+            ],
+            "example": "SUCCEEDED"
+          }
+        },
+        "required": [
+          "outcome"
+        ]
+      },
+      "FakePaymentWebhookDto": {
+        "type": "object",
+        "properties": {
+          "eventType": {
+            "type": "string",
+            "enum": [
+              "PAYMENT_SUCCEEDED",
+              "PAYMENT_FAILED"
+            ],
+            "example": "PAYMENT_SUCCEEDED"
+          },
+          "paymentAttemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "providerReference": {
+            "type": "string",
+            "example": "provider-reference"
+          },
+          "amount": {
+            "type": "integer",
+            "minimum": 0,
+            "example": 170000
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "IDR"
+            ],
+            "example": "IDR"
+          }
+        },
+        "required": [
+          "eventType",
+          "paymentAttemptId",
+          "providerReference",
+          "amount",
+          "currency"
+        ]
+      },
+      "WebhookAcknowledgementDto": {
+        "type": "object",
+        "properties": {
+          "acknowledged": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "acknowledged"
+        ]
+      }
+    }
+  }
+}

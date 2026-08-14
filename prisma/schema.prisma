@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Currency {
+  IDR
+}
+
+enum ArticleType {
+  PRODUCT
+  NEWS
+  OTHER
+}
+
+enum CartStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum OrderStatus {
+  AWAITING_PAYMENT
+  PAID
+  EXPIRED
+}
+
+enum PaymentAttemptStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  EXPIRED
+}
+
+enum ShippingMethod {
+  REGULAR
+}
+
+model GuestSession {
+  id                 String              @id @default(uuid()) @db.Uuid
+  tokenHash          String              @unique
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  carts              Cart[]
+  orders             Order[]
+  idempotencyRecords IdempotencyRecord[]
+}
+
+model Product {
+  id          String           @id @default(uuid()) @db.Uuid
+  slug        String           @unique
+  name        String
+  description String
+  category    String
+  imagePaths  String[]
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  variants    ProductVariant[]
+
+  @@index([isActive, category])
+  @@index([isActive, createdAt])
+}
+
+model ProductVariant {
+  id                String      @id @default(uuid()) @db.Uuid
+  productId         String      @db.Uuid
+  sku               String      @unique
+  optionLabel       String
+  price             Int
+  currency          Currency    @default(IDR)
+  availableQuantity Int
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  product           Product     @relation(fields: [productId], references: [id], onDelete: Restrict)
+  cartItems         CartItem[]
+  orderItems        OrderItem[]
+
+  @@index([productId, isActive])
+  @@index([isActive, price])
+}
+
+model Article {
+  id          String      @id @default(uuid()) @db.Uuid
+  slug        String      @unique
+  type        ArticleType
+  title       String
+  excerpt     String
+  contentHtml String      @db.Text
+  imagePath   String
+  isPublished Boolean     @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([isPublished, type, publishedAt])
+}
+
+model Cart {
+  id             String       @id @default(uuid()) @db.Uuid
+  guestSessionId String       @db.Uuid
+  status         CartStatus   @default(ACTIVE)
+  version        Int          @default(1)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  guestSession   GuestSession @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
+  items          CartItem[]
+
+  @@index([guestSessionId, status])
+}
+
+model CartItem {
+  id               String         @id @default(uuid()) @db.Uuid
+  cartId           String         @db.Uuid
+  productVariantId String         @db.Uuid
+  quantity         Int
+  cart             Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
+
+  @@unique([cartId, productVariantId])
+  @@index([productVariantId])
+}
+
+model Order {
+  id                String             @id @default(uuid()) @db.Uuid
+  guestSessionId    String             @db.Uuid
+  status            OrderStatus        @default(AWAITING_PAYMENT)
+  customerName      String
+  customerEmail     String
+  shippingAddress   Json               @db.JsonB
+  shippingMethod    ShippingMethod     @default(REGULAR)
+  subtotal          Int
+  shippingFee       Int
+  grandTotal        Int
+  currency          Currency           @default(IDR)
+  expiresAt         DateTime
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  guestSession      GuestSession       @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
+  items             OrderItem[]
+  paymentAttempts   PaymentAttempt[]
+  idempotencyRecord IdempotencyRecord?
+
+  @@index([guestSessionId, createdAt])
+  @@index([status, expiresAt])
+}
+
+model OrderItem {
+  id                  String         @id @default(uuid()) @db.Uuid
+  orderId             String         @db.Uuid
+  productVariantId    String         @db.Uuid
+  skuSnapshot         String
+  nameSnapshot        String
+  optionLabelSnapshot String
+  unitPrice           Int
+  quantity            Int
+  lineTotal           Int
+  order               Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  productVariant      ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productVariantId])
+}
+
+model PaymentAttempt {
+  id                       String               @id @default(uuid()) @db.Uuid
+  orderId                  String               @db.Uuid
+  status                   PaymentAttemptStatus @default(PENDING)
+  providerReference        String               @unique
+  amount                   Int
+  currency                 Currency             @default(IDR)
+  expiresAt                DateTime
+  createdAt                DateTime             @default(now())
+  updatedAt                DateTime             @updatedAt
+  order                    Order                @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  initialIdempotencyRecord IdempotencyRecord?   @relation("IdempotencyInitialPayment")
+
+  @@index([orderId, status])
+  @@index([status, expiresAt])
+}
+
+model WebhookEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  providerEventId String   @unique
+  eventType       String
+  payload         Json     @db.JsonB
+  receivedAt      DateTime @default(now())
+}
+
+model IdempotencyRecord {
+  id                      String         @id @default(uuid()) @db.Uuid
+  guestSessionId          String         @db.Uuid
+  idempotencyKey          String
+  requestHash             String
+  orderId                 String         @unique @db.Uuid
+  initialPaymentAttemptId String         @unique @db.Uuid
+  createdAt               DateTime       @default(now())
+  guestSession            GuestSession   @relation(fields: [guestSessionId], references: [id], onDelete: Restrict)
+  order                   Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  initialPaymentAttempt   PaymentAttempt @relation("IdempotencyInitialPayment", fields: [initialPaymentAttemptId], references: [id], onDelete: Restrict)
+
+  @@unique([guestSessionId, idempotencyKey])
+}
