@@ -1,0 +1,34 @@
+{
+  "name": "@mini-ecommerce/api",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test src/foundation.test.ts src/catalog/catalog.test.ts src/order/order.test.ts src/payment/payment.test.ts",
+    "test:integration": "tsx --test src/catalog/catalog.integration.test.ts && tsx --test src/cart/cart.integration.test.ts && tsx --test src/order/order.integration.test.ts && tsx --test src/payment/payment.integration.test.ts",
+    "openapi:generate": "tsx scripts/generate-openapi.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/swagger": "^11.0.0",
+    "@prisma/client": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "express": "^5.1.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "openapi-typescript": "^7.6.1",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "mini-e-commerce",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.1.2",
+  "scripts": {
+    "db:format": "prisma format",
+    "db:validate": "prisma validate",
+    "db:generate": "prisma generate",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:seed-if-empty": "tsx prisma/seed.ts",
+    "db:reset:dev": "tsx prisma/scripts/reset-database.ts dev",
+    "db:reset:test": "tsx prisma/scripts/reset-database.ts test",
+    "api:dev": "pnpm --filter @mini-ecommerce/api dev",
+    "api:build": "pnpm --filter @mini-ecommerce/api build",
+    "api:typecheck": "pnpm --filter @mini-ecommerce/api typecheck",
+    "api:lint": "pnpm --filter @mini-ecommerce/api lint",
+    "api:test": "pnpm --filter @mini-ecommerce/api test",
+    "api:test:integration": "pnpm --filter @mini-ecommerce/api test:integration",
+    "api:openapi": "pnpm --filter @mini-ecommerce/api openapi:generate",
+    "test": "tsx --test packages/content-fixtures/src/index.test.ts",
+    "test:db": "tsx --test prisma/tests/schema.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@mini-ecommerce/content-fixtures": "workspace:*",
+    "@prisma/client": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prisma": "^6.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
