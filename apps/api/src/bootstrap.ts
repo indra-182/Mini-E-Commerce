@@ -1,8 +1,12 @@
 import "reflect-metadata";
 
+import { existsSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { NestFactory } from "@nestjs/core";
 import { RequestMethod, type INestApplication, type LoggerService } from "@nestjs/common";
-import { json, urlencoded } from "express";
+import { json, static as serveStatic, urlencoded, type Express } from "express";
 import { DocumentBuilder, SwaggerModule, type OpenAPIObject } from "@nestjs/swagger";
 
 import { AppModule } from "./app.module.js";
@@ -44,6 +48,59 @@ export function setupOpenApi(app: INestApplication): OpenAPIObject {
   return document;
 }
 
+function isReservedPath(pathname: string): boolean {
+  return (
+    pathname === "/api" ||
+    pathname.startsWith("/api/") ||
+    pathname === "/docs" ||
+    pathname.startsWith("/docs/") ||
+    pathname === "/docs-json" ||
+    pathname === "/health"
+  );
+}
+
+function staticDirectory(): string {
+  return resolve(dirname(fileURLToPath(import.meta.url)), "public");
+}
+
+function setupStaticHosting(app: INestApplication): void {
+  const root = staticDirectory();
+  if (!existsSync(root)) return;
+
+  const expressApp = app.getHttpAdapter().getInstance() as Express;
+  const staticMiddleware = serveStatic(root, {
+    index: "index.html",
+    setHeaders: (response, filePath) => {
+      response.setHeader(
+        "Cache-Control",
+        filePath.endsWith(".html")
+          ? "no-cache"
+          : "public, max-age=31536000, immutable"
+      );
+    }
+  });
+
+  expressApp.use((request, response, next) => {
+    if (isReservedPath(request.path)) {
+      next();
+      return;
+    }
+    staticMiddleware(request, response, next);
+  });
+
+  const notFoundPage = join(root, "404.html");
+  expressApp.use((request, response, next) => {
+    if (isReservedPath(request.path) || !["GET", "HEAD"].includes(request.method)) {
+      next();
+      return;
+    }
+
+    response.status(404).sendFile(notFoundPage, (error) => {
+      if (error && !response.headersSent) next(error);
+    });
+  });
+}
+
 export async function createApplication(options: CreateApplicationOptions = {}): Promise<{
   app: INestApplication;
   document: OpenAPIObject;
@@ -55,6 +112,7 @@ export async function createApplication(options: CreateApplicationOptions = {}):
     logger: options.logger,
     abortOnError: false
   });
+  setupStaticHosting(app);
 
   app.setGlobalPrefix("api/v1", {
     exclude: [
